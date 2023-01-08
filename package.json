@@ -2,10 +2,23 @@
   "name": "mobtime-server",
   "version": "1.0.0",
   "description": "",
+  "type": "module",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node -r dotenv/config --experimental-loader ./.node/hooks/loader.js ./index.js",
+    "dev": "nodemon --exec \"node -r dotenv/config --experimental-loader ./.node/hooks/loader.js\" ./index.js"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "@redis/client": "^1.4.2",
+    "dotenv": "^16.0.3",
+    "url-pattern": "^1.0.3",
+    "uuid": "^9.0.0",
+    "ws": "^8.11.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.20"
+  }
 }
