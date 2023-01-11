@@ -1,18 +1,16 @@
-import Controller from 'controllers:controller.js';
+import Controller from 'interfaces:controller.js';
 import { Json } from 'http:response/Json.js';
 
-import { app } from 'package:bootstrap/app.js';
-
 export default class Show extends Controller {
-  dependencies = [
-    'cache',
-    'log',
-    'publisher:local',
-  ];
+  constructor() {
+    super([
+      'cache',
+      'log',
+    ]);
+  }
 
-  async invoke(request, cache, log, publisher) {
-    console.log('show', { request, cache, log, publisher });
-    const timerId = request.input('timerId');
+  async invoke(request, cache, log) {
+    const timerId = request.params('timerId');
     const key = `timer:${timerId}`;
 
     let state = await cache.get(key);
@@ -21,7 +19,7 @@ export default class Show extends Controller {
       state = {
         public: {
           mob: [],
-          goals: [],
+          notes: '',
           timer: {
             duration: null,
             startedAt: null,
@@ -40,8 +38,6 @@ export default class Show extends Controller {
       state = JSON.parse(state);
       log.info('Using already created timer');
     }
-
-    setTimeout(() => publisher.publish(key, 'yoooo'), 5000);
 
     return new Json({
       timerId,

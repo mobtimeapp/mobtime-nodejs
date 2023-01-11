@@ -6,14 +6,17 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node -r dotenv/config --experimental-loader ./.node/hooks/loader.js ./index.js",
-    "dev": "nodemon --exec \"node -r dotenv/config --experimental-loader ./.node/hooks/loader.js\" ./index.js"
+    "start": "node -r dotenv/config --experimental-loader ./.node/hooks/loader.js ./server.js",
+    "dev": "nodemon -r dotenv/config --experimental-loader ./.node/hooks/loader.js -w app -w bootstrap -w config -w routes ./server.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@prisma/client": "^4.8.1",
     "@redis/client": "^1.4.2",
+    "colorette": "^2.0.19",
     "dotenv": "^16.0.3",
+    "prisma": "^4.8.1",
     "url-pattern": "^1.0.3",
     "uuid": "^9.0.0",
     "ws": "^8.11.0"

@@ -7,6 +7,8 @@ const paths = {
   app: `file://${BASE_PATH}/app`,
 
   http: `file://${BASE_PATH}/app/http`,
+  console: `file://${BASE_PATH}/app/console`,
+
   controllers: `file://${BASE_PATH}/app/http/controllers`,
   websockets: `file://${BASE_PATH}/app/http/websockets`,
   providers: `file://${BASE_PATH}/app/providers`,
@@ -17,6 +19,8 @@ const paths = {
   helpers: `file://${BASE_PATH}/app/helpers`,
   channels: `file://${BASE_PATH}/app/channels`,
   topics: `file://${BASE_PATH}/app/topics`,
+  commands: `file://${BASE_PATH}/app/console/commands`,
+
 
   routes: `file://${BASE_PATH}/routes`,
   config: `file://${BASE_PATH}/config`,

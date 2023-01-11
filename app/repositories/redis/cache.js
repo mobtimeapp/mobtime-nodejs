@@ -6,7 +6,7 @@ import * as cacheConfig from 'config:cache.js';
 export class RedisCache extends CacheInterface {
   #client = null;
 
-  constructor() {
+  constructor(app) {
     super();
 
     this.#client = redis(cacheConfig.redis);

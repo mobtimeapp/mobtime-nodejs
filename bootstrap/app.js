@@ -1,4 +1,7 @@
 import * as http from 'app:http/kernel.js'
+import * as log from 'factories:log.js';
+import * as cache from 'factories:cache.js';
+
 class Application {
   #remappings = {};
   #singletons = {};
@@ -19,8 +22,14 @@ class Application {
     return this.#singletons[src];
   }
 
-  async import(src) {
-    return import(this.#remappings[src] || src);
+  async import(src, exportKey) {
+    return import(this.#remappings[src] || src)
+      .then((exported) => {
+        if (!exportKey) {
+          return exported;
+        }
+        return exported[exportKey];
+      });
   }
 
   make(src, ...args) {
@@ -80,4 +89,5 @@ class Application {
 
 export const app = new Application();
 
-app.bind('http', () => http.singleton(app));
+app.bind('log', () => log.factory(app));
+//app.bind('cache', () => cache.factory(app));

@@ -1,0 +1,3 @@
+#!/bin/sh
+
+node -r dotenv/config --experimental-loader ./.node/hooks/loader.js carpenter.js "${@:1}"

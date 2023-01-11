@@ -1,9 +1,13 @@
-export class Middleware {
-  constructor() {
-    this.handle = this.handle.bind(this);
+import Injectable from 'helpers:injectable.js';
+
+export class Middleware extends Injectable {
+  constructor(dependencies) {
+    super();
+
+    this.handle = this.wrapWithDependencies(this.handle.bind(this), dependencies);
   }
 
-  handle(_request, _response, next) {
-    next();
+  handle(request, next) {
+    return next(request);
   }
 };

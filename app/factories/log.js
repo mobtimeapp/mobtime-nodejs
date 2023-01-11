@@ -10,7 +10,7 @@ const drivers = {
   default: ConsoleLog,
 };
 
-export const LogFactory = () => {
+export const factory = () => {
   const logClass = drivers[logConfig.driver] || drivers.default;
   return new logClass();
 };

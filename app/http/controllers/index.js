@@ -1,5 +1,5 @@
-import Controller from './controller.js';
-import { Json } from '../response/Json.js';
+import Controller from 'interfaces:controller.js';
+import { Json } from 'http:response/Json.js';
 
 import { routes } from 'routes:api.js';
 

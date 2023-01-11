@@ -2,11 +2,11 @@ import { join } from 'node:path';
 
 import { app } from 'package:bootstrap/app.js';
 
-export const load = (namespace, onload) => (src) => {
-  return (...args) => {
+export const load = (namespace) => (src) => {
+  return () => {
     return app.import(`${namespace}:${src}`)
       .then((moduleDefinition) => {
-        return onload(moduleDefinition.default, args);
+        return moduleDefinition.default;
       })
       .catch((err) => {
         console.error('Unable to import', namespace, src, err);

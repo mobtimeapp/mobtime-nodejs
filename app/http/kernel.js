@@ -1,7 +1,9 @@
 import http from 'node:http';
+
 import { WebSocketServer } from 'ws';
 import UrlPattern from 'url-pattern';
 
+import Request from 'http:requests/request.js';
 import * as httpConfig from 'config:http.js';
 
 class Kernel {
@@ -12,7 +14,8 @@ class Kernel {
   routes = new Map();
 
   #httpMiddleware = [
-    'http:middleware/transformRequest.js',
+    'http:middleware/logRequests.js',
+    'http:middleware/bodyParser.js',
   ];
   #wssMiddleware = [];
 
@@ -35,7 +38,6 @@ class Kernel {
     const trimmed = path === '/'
       ? path
       : path.replace(/\/+$/, '');
-    console.log('http/kernel.map', trimmed, route);
     this.routes.set(
       new UrlPattern(trimmed),
       route,
@@ -43,22 +45,29 @@ class Kernel {
   }
 
   async handle(request, response) {
-    const req = await this.runMiddleware(this.#httpMiddleware, request)
-    const route = this.getRoute(request.url);
+    const [path, _] = request.url.split('?');
+    const { route, matches } = this.getRouteAndMatches(path);
+
+    const req = await this.runMiddleware(this.#httpMiddleware, new Request(request, matches))
     const handler = await route.getHandler();
-    const responder = await handler(req);
-    return responder.handle(request, response);
+    try {
+      const responder = await handler(req);
+      return responder.handle(request, response);
+    } catch (err) {
+      console.log('Unable to run controller', err);
+      return response
+        .writeHead(null, 500)
+        .end();
+    }
   }
 
-  getRoute(path) {
+  getRouteAndMatches(path) {
     for (const [pattern, route] of this.routes) {
-      const match = pattern.match(path);
-      if (!match) continue;
-      console.log('getRoute', path, pattern, route.path);
+      const matches = pattern.match(path);
+      if (!matches) continue;
 
-      return route;
+      return { route, matches };
     }
-    console.log('getRoute not found', path);
     return null;
   }
 
@@ -73,7 +82,8 @@ class Kernel {
     if (middleware.length === 0) return value;
 
     const [current, ...remaining] = middleware;
-    const instance = new (await this.#app.import(current)).default();
+    const middlewareClass = await this.#app.import(current, 'default');
+    const instance = new middlewareClass();
     return instance.handle(
       value,
       (nextValue) => this.runMiddleware(remaining, nextValue),

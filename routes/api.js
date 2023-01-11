@@ -1,7 +1,7 @@
 import { Route } from 'routes:lib/shared.js'
 import { controller } from 'routes:lib/controller.js';
 
-export const routes = Route.group({ middleware: ['logRequests'] }, [
+export const routes = Route.group({}, [
   Route.get('/', controller('index.js'))
     .name('index')
     .description('Shows API documentation')

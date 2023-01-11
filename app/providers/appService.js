@@ -1,6 +1,6 @@
 import { Service } from 'interfaces:service.js';
 
-import { mapping } from 'config:providers.js';
+import * as broadcaster from 'publishers:local.js';
 
 export default class AppService extends Service {
   #app = null;
@@ -14,5 +14,6 @@ export default class AppService extends Service {
   }
 
   async register() {
+    this.#app.bind('broadcaster', () => broadcaster.singleton);
   }
 };

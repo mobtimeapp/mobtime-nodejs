@@ -25,7 +25,7 @@ export default class Show extends Controller {
 
       const uuid = v4().toString();
 
-      // await cache.put(`connection:${uuid}`, timerId, WEBSOCKET_CONNECTION_TTL);
+      await cache.put(`connection:${uuid}`, timerId, WEBSOCKET_CONNECTION_TTL);
 
       return new Json({
         ws: `ws://${httpConfig.host}:${httpConfig.port}/websocket/${uuid}/timer/${timerId}`,

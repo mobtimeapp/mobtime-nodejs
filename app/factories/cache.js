@@ -10,7 +10,7 @@ const drivers = {
   default: NodeCache,
 };
 
-export const CacheFactory = () => {
+export const factory = () => {
   const cacheClass = drivers[cacheConfig.driver] || drivers.default;
   return (new cacheClass()).connect();
 };
