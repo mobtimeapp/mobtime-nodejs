@@ -8,13 +8,17 @@ export default class Client extends Websocket {
   #timerId = null;
   #clientId = null;
 
-  async validate(params) {
-    return app.withDependencies(['cache'], (cache) => {
-      const connectionKey = `connection:${params.clientId}`;
-      return params.timerId
-        && cache.has(connectionKey)
-        && cache.get(connectionKey) === params.timerId;
-    });
+  constructor() {
+    super([
+      'contracts:cache.js',
+    ]);
+  }
+
+  async validate(params, cache) {
+    const connectionKey = `connection:${params.clientId}`;
+    return params.timerId
+      && (await cache.has(connectionKey))
+      && (await cache.get(connectionKey)) === params.timerId;
   }
 
   async handle(websocket, params) {

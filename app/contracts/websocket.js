@@ -9,6 +9,7 @@ export class Websocket extends Injectable {
   #websocket = null;
 
   constructor(dependencies) {
+    this.validate = this.wrapWithDependencies(this.validate.bind(this), dependencies);
     this.handle = this.wrapWithDependencies(this.handle.bind(this), dependencies);
   }
 
