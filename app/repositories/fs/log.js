@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import process from 'node:process';
 import path from 'node:path';
 
-import { LogInterface } from 'interfaces:log.js';
+import { LogInterface } from 'contracts:log.js';
 
 export class FileLog extends LogInterface {
   constructor() {

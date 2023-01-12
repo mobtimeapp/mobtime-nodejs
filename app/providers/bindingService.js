@@ -1,9 +1,6 @@
 import { app } from 'providers:appService.js';
 
-import { Service } from 'interfaces:service.js';
-
-import { LogFactory } from 'factories:log.js';
-import { CacheFactory } from 'factories:cache.js';
+import { Service } from 'contracts:service.js';
 
 import * as localPublisher from 'publishers:local.js';
 
@@ -15,8 +12,6 @@ export default class BindingService extends Service {
   }
 
   async register() {
-    await app.bind('log', () => LogFactory());
-    await app.bind('cache', () => CacheFactory());
     await app.bind('publisher:local', () => localPublisher.singleton);
   }
 };

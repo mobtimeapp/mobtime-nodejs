@@ -1,4 +1,4 @@
-import Controller from 'interfaces:controller.js';
+import Controller from 'contracts:controller.js';
 import { Json } from 'http:response/Json.js';
 
 import { routes } from 'routes:api.js';

@@ -1,6 +1,6 @@
 import * as childProcess from 'node:child_process';
 
-import Command from 'interfaces:command.js';
+import Command from 'contracts:command.js';
 
 import * as databaseConfig from 'config:database.js';
 

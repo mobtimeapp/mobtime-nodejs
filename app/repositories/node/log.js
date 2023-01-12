@@ -1,4 +1,4 @@
-import { LogInterface } from 'interfaces:log.js';
+import { LogInterface } from 'contracts:log.js';
 
 export class ConsoleLog extends LogInterface {
   log(...args) {

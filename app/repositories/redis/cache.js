@@ -1,12 +1,12 @@
 import { redis } from './redis.js';
-import { CacheInterface } from 'interfaces:cache.js';
+import { CacheInterface } from 'contracts:cache.js';
 
 import * as cacheConfig from 'config:cache.js';
 
 export class RedisCache extends CacheInterface {
   #client = null;
 
-  constructor(app) {
+  constructor(_app) {
     super();
 
     this.#client = redis(cacheConfig.redis);

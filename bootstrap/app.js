@@ -1,10 +1,16 @@
-import * as http from 'app:http/kernel.js'
 import * as log from 'factories:log.js';
 import * as cache from 'factories:cache.js';
 
+import Definition from 'helpers:bindings/definition.js';
+import Lazy from 'helpers:bindings/lazy.js';
+import Singleton from 'helpers:bindings/singleton.js';
+
+import * as appConfig from 'config:app.js';
+
 class Application {
   #remappings = {};
-  #singletons = {};
+  #bound = {};
+  #registered = {};
 
   constructor() {
     this.alias = this.alias.bind(this);
@@ -13,13 +19,58 @@ class Application {
     this.make = this.make.bind(this);
   }
 
+  async register(src) {
+    if (src in this.#registered) {
+      return this.#registered[src];
+    }
+
+    const providerClass = await this.import(src, 'default');
+    const provider = new providerClass(this);
+
+    if ('register' in provider) await provider.register();
+    if ('boot' in provider) await provider.boot();
+
+    this.#registered[src] = provider;
+  }
+
+  async boot() {
+    await Promise.all(
+      appConfig.serviceProviders.map(src => this.register(src))
+    );
+  }
+
   alias(originalImport, transformedImport) {
     this.#remappings[originalImport] = transformedImport;
   }
 
-  async bind(src, definition) {
-    this.#singletons[src] = await definition();
-    return this.#singletons[src];
+  async bind(src, what) {
+    if (typeof what === 'function') {
+      return this.#bindLazy(src, what);
+    } else if (typeof what === 'string') {
+      return this.#bindAlias(src, what);
+    }
+
+    return this.#bindInstance(src, what);
+  }
+
+  async #bindInstance(src, instance) {
+    this.#bound[src] = new Definition(instance, this);
+    return this;
+  }
+
+  async #bindAlias(srcInterface, srcImplementation) {
+    return this.#bindInstance(srcInterface, this.import(srcImplementation, 'default'))
+  }
+
+  async #bindLazy(src, method) {
+    this.#bound[src] = new Lazy(method, this)
+    return this;
+  }
+
+  async singleton(src, implementation) {
+    let imp = implementation || src;
+    this.#bound[src] = new Singleton(imp, this);
+    return this;
   }
 
   async import(src, exportKey) {
@@ -29,65 +80,30 @@ class Application {
           return exported;
         }
         return exported[exportKey];
+      })
+      .catch((err) => {
+        console.error('AppContainer', { src, exportKey }, err);
       });
   }
 
   make(src, ...args) {
-    if (typeof src === 'function' && src.toString().startsWith('class')) {
-      return new src(...args);
+    if (src in this.#bound) {
+      return this.#bound[src].resolve(...args);
     }
-
-    return typeof this.#singletons[src] === 'function'
-      ? this.#singletons[src](...args)
-      : this.#singletons[src];
-  }
-
-  isBound(src) {
-    return src in this.#singletons;
-  }
-
-  async #makeOrImport(src, ...args) {
-    if (this.isBound(src)) {
-      return this.make(src, ...args);
-    }
-
-    return this.import(src)
-      .then((moduleDefinition) => {
-        const exported = Object.keys(moduleDefinition);
-        if (exported.length > 1) {
-          return moduleDefinition[args[0]];
-        }
-        return moduleDefinition.default || moduleDefinition[exported[0]];
-      })
-      .then((exported) => {
-        if (typeof exported === 'function' && exported.toString().startsWith('class ')) {
-          return new exported();
-        }
-        return exported;
-      })
+    return this.import(src, 'default')
+      .then((madeClass) => new madeClass(...args))
       .catch((err) => {
-        console.error('Unable to import', src, err);
-
-        return undefined;
+        console.error('Container.make', src, args, err);
       });
-  }
-
-  async withDependencies(dependencies, callback) {
-    return Promise.all(
-      dependencies.map(d => {
-        const args = [].concat(d);
-
-        return this.#makeOrImport(...args).catch((err) => {
-          console.error('Unable to dependency inject', d, err);
-          return null;
-        });
-      })
-    )
-      .then(deps => callback(...deps));
   }
 }
 
 export const app = new Application();
 
-app.bind('log', () => log.factory(app));
-//app.bind('cache', () => cache.factory(app));
+app.singleton('http:kernel.js');
+app.singleton('console:kernel.js');
+
+app.bind('app', app);
+
+app.bind('contracts:log.js', () => log.factory(app));
+app.bind('contracts:cache.js', () => cache.factory(app));

@@ -1,4 +1,4 @@
-class Kernel {
+export default class Kernel {
   #app = null;
 
   constructor(app) {
@@ -15,5 +15,3 @@ class Kernel {
     }
   }
 };
-
-export const singleton = (app) => new Kernel(app);

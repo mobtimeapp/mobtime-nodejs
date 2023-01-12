@@ -1,4 +1,4 @@
-import { Middleware } from 'interfaces:middleware.js';
+import { Middleware } from 'contracts:middleware.js';
 
 export default class BodyParser extends Middleware {
   constructor() {

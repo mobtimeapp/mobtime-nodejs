@@ -1,12 +1,15 @@
+import Injectable from 'helpers:injectable.js';
+
 const PING_INTERVAL = 1 * 60 * 1000;
 const PING_TIMEOUT = 10 * 1000;
 
-export class Websocket {
+export class Websocket extends Injectable {
   #pingInterval = null;
   #pingTimeout = null;
   #websocket = null;
 
-  constructor() {
+  constructor(dependencies) {
+    this.handle = this.wrapWithDependencies(this.handle.bind(this), dependencies);
   }
 
   get websocket() {

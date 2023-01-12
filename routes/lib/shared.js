@@ -1,3 +1,5 @@
+import UrlPattern from 'url-pattern';
+
 import { join } from 'node:path';
 
 import { app } from 'package:bootstrap/app.js';
@@ -14,24 +16,36 @@ export const load = (namespace) => (src) => {
   };
 };
 
-const joinPath = (a, b) => join(a, b);
+const joinPath = (a, b) => {
+  const joined = join(a, b);
+  return (joined.length > 1)
+    ? joined.replace(/\/$/, '')
+    : joined;
+}
 
 export class Routable {
   #path = null;
+  #pattern = null;
   #name = null;
   #middleware = [];
   #parent = null;
 
   constructor(path) {
     this.#path = path;
+    this.#pattern = new UrlPattern(this.getPath());
   }
 
   getPath() { return this.#parent ? joinPath(this.#parent.getPath(), this.#path) : this.#path; }
   getName() { return this.#parent ? [this.#parent.name, this.#name].join('') : this.#name; }
   getMiddleware() { return (this.#parent ? this.#parent.middleware : []).concat(this.#middleware); }
 
+  match(path) {
+    return this.#pattern.match(path);
+  }
+
   parent(parent) {
     this.#parent = parent;
+    this.#pattern = new UrlPattern(this.getPath());
     return this;
   }
 
@@ -103,6 +117,10 @@ export class Group extends Routable {
 
   constructor(basePath = '/') {
     super(basePath);
+  }
+
+  match(_path) {
+    return null;
   }
 
   children(routes) {

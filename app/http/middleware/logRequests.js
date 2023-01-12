@@ -1,8 +1,8 @@
-import { Middleware } from 'interfaces:middleware.js';
+import { Middleware } from 'contracts:middleware.js';
 
 export default class LogRequests extends Middleware {
   constructor() {
-    super(['log']);
+    super(['contracts:log.js']);
   }
 
   handle(request, next, log) {

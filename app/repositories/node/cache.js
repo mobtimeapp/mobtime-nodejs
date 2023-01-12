@@ -1,4 +1,4 @@
-import { CacheInterface } from 'interfaces:cache.js';
+import { CacheInterface } from 'contracts:cache.js';
 
 const cache = {};
 

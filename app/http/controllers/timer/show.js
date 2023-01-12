@@ -1,11 +1,11 @@
-import Controller from 'interfaces:controller.js';
+import Controller from 'contracts:controller.js';
 import { Json } from 'http:response/Json.js';
 
 export default class Show extends Controller {
   constructor() {
     super([
-      'cache',
-      'log',
+      'contracts:cache.js',
+      'contracts:log.js',
     ]);
   }
 
