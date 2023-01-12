@@ -5,7 +5,11 @@ export default class Migrate extends PrismaCommand {
     return 'migrate dev';
   }
 
-  getArguments(_args) {
-    return '';
+  getArguments(args) {
+    return `--name ${args[0]} --create-only`;
+  }
+
+  validate(args) {
+    return Boolean(args[0]);
   }
 }

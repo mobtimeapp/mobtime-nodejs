@@ -1,4 +1,4 @@
-import PrismaCommand from './prisma.js';
+import PrismaCommand from '../prisma.js';
 
 export default class Status extends PrismaCommand {
   getCommand() {

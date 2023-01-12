@@ -16,3 +16,12 @@ model Profile {
   name        String
   avatar      String?
 }
+
+model ProfileConnection {
+  id            Int     @id @default(autoincrement())
+  connectionId  String
+  timerId       String
+
+  @@unique([connectionId, timerId])
+  
+}

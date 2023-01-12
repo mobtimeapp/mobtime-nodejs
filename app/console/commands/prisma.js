@@ -17,7 +17,15 @@ export default class PrismaCommand extends Command {
     return args.join(' ');
   }
 
+  validate(_args) {
+    return true;
+  }
+
   async handle(_, args) {
+    if (!this.validate(args)) {
+      this.error('Missing arguments');
+      return 1;
+    }
     const cmd = [
       'node_modules/.bin/prisma',
       this.getCommand(),
