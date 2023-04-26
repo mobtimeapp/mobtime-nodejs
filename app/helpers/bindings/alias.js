@@ -1,17 +1,19 @@
 export default class Alias {
-  #boundSrc = null;
+  #remapped = null;
+  #src = null;
   #app = null;
 
-  constructor(boundSrc, app) {
-    this.#boundSrc = boundSrc;
+  constructor(remapped, src, app) {
+    this.#remapped = remapped;
+    this.#src = src;
     this.#app = app;
   }
 
   async resolve(...args) {
-    return this.#app.import(this.#boundSrc, 'default')
-      .then((boundClass) => new boundClass(...args))
+    return this.#app.make(this.#remapped, ...args)
       .catch((err) => {
-        console.error('App.binding.alias error', this.#boundSrc, err);
+        console.error('App.binding.alias error', { remapped: this.#remapped, src: this.#src }, err);
+        return Promise.reject(err);
       });
   }
 }

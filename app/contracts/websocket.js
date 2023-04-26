@@ -1,16 +1,16 @@
-import Injectable from 'helpers:injectable.js';
+import Binding from 'helpers:binding.js';
 
 const PING_INTERVAL = 1 * 60 * 1000;
 const PING_TIMEOUT = 10 * 1000;
 
-export class Websocket extends Injectable {
+export class Websocket {
   #pingInterval = null;
   #pingTimeout = null;
   #websocket = null;
 
   constructor(dependencies) {
-    this.validate = this.wrapWithDependencies(this.validate.bind(this), dependencies);
-    this.handle = this.wrapWithDependencies(this.handle.bind(this), dependencies);
+    new Binding(this, 'validate', dependencies);
+    new Binding(this, 'handle', dependencies);
   }
 
   get websocket() {
@@ -22,19 +22,20 @@ export class Websocket extends Injectable {
   }
 
   async handle(websocket, params) {
-    this.#websocket = websocket;
     if (!(await this.validate(params))) {
-      return this.onWebsocketInvalid();
+      return this.onWebsocketInvalid(websocket);
     }
 
-    this.#websocket.addEventListener('message', this.onWebsocketMessage.bind(this));
-    this.#websocket.addEventListener('close', this.onWebsocketClose.bind(this));
-    this.#websocket.addEventListener('pong', this.onWebsocketPong.bind(this));
+    websocket.addEventListener('message', this.onWebsocketMessage.bind(this));
+    websocket.addEventListener('close', this.onWebsocketClose.bind(this));
+    websocket.addEventListener('pong', this.onWebsocketPong.bind(this));
 
-    this.#schedulePing();
+    this.#schedulePing(websocket);
   }
 
-  #ping() {
+  onWebsocketPing() {}
+
+  #ping(websocket) {
     clearTimeout(this.#pingTimeout);
 
     this.#pingTimeout = setTimeout(
@@ -42,20 +43,21 @@ export class Websocket extends Injectable {
       PING_TIMEOUT
     );
 
-    this.#websocket.ping();
+    websocket.ping();
+    this.onWebsocketPing();
   }
 
-  #schedulePing() {
+  #schedulePing(websocket) {
     clearTimeout(this.#pingInterval);
 
     this.#pingInterval = setTimeout(
-      () => this.#ping(),
+      () => this.#ping(websocket),
       PING_INTERVAL,
     );
   }
 
-  onWebsocketInvalid() {
-    this.#websocket.close();
+  onWebsocketInvalid(websocket) {
+    websocket.close();
   }
 
   onWebsocketMessage(_event) {}
@@ -66,7 +68,7 @@ export class Websocket extends Injectable {
     this.#schedulePing();
   }
 
-  onWebsocketPingTimeout() {
-    this.#websocket.close();
+  onWebsocketPingTimeout(websocket) {
+    websocket.close();
   }
 };

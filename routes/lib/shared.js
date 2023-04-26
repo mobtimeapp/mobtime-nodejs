@@ -36,11 +36,24 @@ export class Routable {
   }
 
   getPath() { return this.#parent ? joinPath(this.#parent.getPath(), this.#path) : this.#path; }
-  getName() { return this.#parent ? [this.#parent.name, this.#name].join('') : this.#name; }
+  getName() { return this.#parent ? [this.#parent.getName(), this.#name].join('') : this.#name; }
   getMiddleware() { return (this.#parent ? this.#parent.middleware : []).concat(this.#middleware); }
 
   match(path) {
     return this.#pattern.match(path);
+  }
+
+  toUrl(params, query = {}) {
+    const queryParams = Object.keys(query)
+      .map((key) => `${key}=${encodeURIComponent(query[key])}`)
+      .join('&');
+
+    return [
+      this.#pattern.stringify(params),
+      queryParams
+    ]
+      .filter(Boolean)
+      .join('?');
   }
 
   parent(parent) {
@@ -61,8 +74,8 @@ export class Routable {
 
   toJson() {
     return {
-      name: this.getNname,
-      path: this.getPath,
+      name: this.getName(),
+      path: this.getPath(),
     }
   }
 }
@@ -153,3 +166,4 @@ Route.group = (options, children = []) => {
   g.children(children);
   return g;
 };
+Route.ws = (path, handler) => new Route(`GET ${path}`).handler(handler);

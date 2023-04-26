@@ -6,7 +6,8 @@ export default class Singleton {
   #bound = UNSET;
 
   constructor(src, app) {
-    this.#src = src;
+    this.#src = typeof src === 'string' ? src : null;
+    this.#bound = typeof src === 'string' ? UNSET : src;
     this.#app = app;
   }
 

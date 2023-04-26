@@ -10,18 +10,20 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Profile {
-  id          Int     @id @default(autoincrement())
-  externalId  String  @unique
-  name        String
-  avatar      String?
-}
-
-model ProfileConnection {
-  id            Int     @id @default(autoincrement())
-  connectionId  String
-  timerId       String
+model Connection {
+  id              Int     @id @default(autoincrement())
+  connectionId    String
+  timerId         String
+  connectedAt     DateTime?
+  disconnectedAt  DateTime?
+  pingedAt        DateTime?
+  timeoutAt       DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @default(now())
 
   @@unique([connectionId, timerId])
-  
+  @@index([connectedAt])
+  @@index([disconnectedAt])
+  @@index([timeoutAt])
+  @@index([createdAt])
 }

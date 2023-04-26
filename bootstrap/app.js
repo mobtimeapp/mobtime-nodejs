@@ -39,15 +39,16 @@ class Application {
     );
   }
 
-  alias(originalImport, transformedImport) {
-    this.#remappings[originalImport] = transformedImport;
+  alias(remapped, src) {
+    this.#bound[src] = new Alias(remapped, src, this);
+    return this;
   }
 
   async bind(src, what) {
     if (typeof what === 'function') {
       return this.#bindLazy(src, what);
     } else if (typeof what === 'string') {
-      return this.#bindAlias(src, what);
+      return this.#bindAlias(what, src);
     }
 
     return this.#bindInstance(src, what);
@@ -74,7 +75,7 @@ class Application {
   }
 
   async import(src, exportKey) {
-    return import(this.#remappings[src] || src)
+    return import(src)
       .then((exported) => {
         if (!exportKey) {
           return exported;
@@ -100,6 +101,7 @@ class Application {
 
 export const app = new Application();
 
+app.singleton('websocket:kernel.js');
 app.singleton('http:kernel.js');
 app.singleton('console:kernel.js');
 

@@ -14,7 +14,7 @@ export default class PrismaCommand extends Command {
   }
 
   getArguments(args) {
-    return args.join(' ');
+    return args.filter(Boolean);
   }
 
   validate(_args) {
@@ -26,24 +26,20 @@ export default class PrismaCommand extends Command {
       this.error('Missing arguments');
       return 1;
     }
-    const cmd = [
-      'node_modules/.bin/prisma',
-      this.getCommand(),
-      `--schema ${databaseConfig.schema}`,
-      this.getArguments(args),
-    ].join(' ');
 
-    this.log(cmd);
+    const cmd = 'node_modules/.bin/prisma';
+    const prismaArgs = [
+      ...([].concat(this.getCommand())),
+      '--schema',
+      databaseConfig.schema,
+      ...([].concat(this.getArguments(args))),
+    ];
 
-    const proc = childProcess.exec(cmd);
+    this.log([].concat(cmd).concat(prismaArgs).join(' '));
 
-    proc.stdout.on('data', (buffer) => {
-      if (buffer.trim()) { console.log(buffer); }
+    const proc = childProcess.spawn(cmd, prismaArgs, {
+      stdio: [process.stdin, process.stdout, process.stderr],
     });
-    proc.stderr.on('data', (buffer) => {
-      if (buffer.trim()) console.error(buffer);
-    });
-
 
     return new Promise((resolve, reject) => {
       proc.on('exit', (code) => {

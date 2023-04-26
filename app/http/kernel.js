@@ -3,57 +3,83 @@ import http from 'node:http';
 import { WebSocketServer } from 'ws';
 import UrlPattern from 'url-pattern';
 
+import { Group } from 'routes:lib/shared.js';
+
 import Request from 'http:requests/request.js';
 import * as httpConfig from 'config:http.js';
 
 export default class Kernel {
   #app = null;
   #http = null;
-  #wss = null;
-  #routeFinderFn = () => null;
+  #routes = [];
 
-  routes = new Map();
-
-  #httpMiddleware = [
+  #middleware = [
     'http:middleware/logRequests.js',
     'http:middleware/bodyParser.js',
   ];
-  #wssMiddleware = [];
 
   constructor(app) {
     this.#app = app;
 
     this.#http = http.createServer();
-    this.#wss = new WebSocketServer({ noServer: true });
 
-    this.#http.on('request', this.handle.bind(this));
-    this.#http.on('upgrade', this.upgrade.bind(this));
   }
 
   async serve() {
+    this.#http.on('request', this.handle.bind(this));
+
+    const websocketKernel = await this.#app.make('websocket:kernel.js');
+    websocketKernel.bind(this.#http);
+
     this.#http.listen(httpConfig.port, httpConfig.host, () => {
       console.log('Listening', `${httpConfig.url}`);
     });
   }
 
-  setRouteFinderFn(routeFinderFn) {
-    this.#routeFinderFn = routeFinderFn;
+  bindRoutes(routes) {
+    this.#routes = routes;
   }
 
-  map(path, route) {
-    const trimmed = path === '/'
-      ? path
-      : path.replace(/\/+$/, '');
-    this.routes.set(
-      new UrlPattern(trimmed),
-      route,
-    );
+  #routeByName(name, params, query, collection) {
+    for (const route of ([].concat(collection))) {
+      if (route instanceof Group) {
+        const result = this.#routeByName(name, params, query, route.getChildren());
+        if (result) return result;
+        continue;
+      }
+
+      if (route.getName() === name) {
+        return route.toUrl(params, query);
+      }
+    }
+    return null;
+  }
+
+  routeByName(name, params, query) {
+    return this.#routeByName(name, params, query, this.#routes);
+  }
+
+  #route(path, collection) {
+    console.log('http.#route', path, { collection });
+    for (const route of ([].concat(collection))) {
+      if (route instanceof Group) {
+        const result = this.#route(path, route.getChildren());
+        if (result) return result;
+        continue;
+      }
+
+      const matches = route.match(path);
+      if (!matches) continue;
+
+      return { route, matches };
+    }
+    return null;
   }
 
   async handle(request, response) {
     try {
       const [path, _] = request.url.split('?');
-      const result = this.#routeFinderFn(path);
+      const result = this.#route(path, this.#routes);
       if (!result) {
       return response
         .writeHead(404)
@@ -62,7 +88,7 @@ export default class Kernel {
 
       const { route, matches } = result;
 
-      const req = await this.runMiddleware(this.#httpMiddleware, new Request(request, matches))
+      const req = await this.runMiddleware(this.#middleware, new Request(request, matches))
       const handler = await route.getHandler();
       const responder = await handler(req);
       return responder.handle(request, response);
@@ -72,23 +98,6 @@ export default class Kernel {
         .writeHead(500)
         .end('500 Internal Error');
     }
-  }
-
-  getRouteAndMatches(path) {
-    for (const [pattern, route] of this.routes) {
-      const matches = pattern.match(path);
-      if (!matches) continue;
-
-      return { route, matches };
-    }
-    return null;
-  }
-
-  async upgrade(request, tcpSocket, head) {
-    const req = await this.runMiddleware(this.#wssMiddleware, request);
-    this.#wss.handleUpgrade(req, tcpSocket, head, (websocket) => {
-      this.#wss.emit('connection', websocket);
-    });
   }
 
   async runMiddleware(middleware, value) {

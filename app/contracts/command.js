@@ -3,9 +3,7 @@ import Injectable from 'helpers:injectable.js';
 
 import * as appConfig from 'config:app.js';
 
-import * as childProcess from 'node:child_process';
-
-import { green, blue, whiteBright } from 'colorette';
+import { green, blue, whiteBright, bgRedBright } from 'colorette';
 
 export default class Command extends Injectable {
   constructor(dependencies) {
@@ -48,7 +46,7 @@ export default class Command extends Injectable {
   }
 
   error(...args) {
-    console.error(...this.#preamble('ERR'), ...args);
+    console.error(...args.map(text => bgRedBright(whiteBright(text))));
   }
 
   #preamble(type) {
@@ -59,26 +57,12 @@ export default class Command extends Injectable {
     ];
   }
 
-  async carpenter(command, args, options, callback) {
-    const proc = Command.run(command, args);
-
-    return new Promise((resolve, reject) => {
-      proc.on('exit', (code) => {
-        if (code === 0) {
-          return resolve();
-        }
-        return reject(code);
-      });
-
-      proc.on('error', (error) => {
-        reject(error);
-      });
-
-      callback(proc);
-    });
+  carpenter(command, args) {
+    return Command.run(command, args);
   }
 };
 
-Command.run = (command, args, options) => {
-  return childProcess.fork('./carpenter.js', [command, ...args], options);
+Command.run = async (command, args) => {
+  const kernel = await app.make('console:kernel.js');
+  return kernel.handle(command, args);
 };

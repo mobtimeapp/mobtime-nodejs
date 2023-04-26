@@ -1,21 +1,16 @@
-import Matcher from 'url-pattern';
+import { app } from 'package:bootstrap/app.js';
 
-import { load } from './shared.js';
-
-export const route = (path, handler) => {
-  const pattern = new Matcher(path);
-  return (request, socket) => {
-    const parsedParams = pattern.match(request.url);
-    if (!parsedParams) {
-      return null;
-    }
-
-    const params = { ...(request.params || {}), ...parsedParams };
-
-    return handler(socket, params);
-  };
+export const socket = (controllerName) => (...args) => {
+  const importPath = `websocket:controllers/${controllerName}`;
+  return app.import(importPath)
+    .then((imported) => {
+      console.log('route/lib/websocket', importPath, imported);
+      return imported;
+    })
+    .then(({ default: controllerClass }) => {
+      return (new controllerClass()).handle(...args);
+    })
+    .catch((err) => {
+      console.error('Unable to import websocket controller', controllerName, err);
+    });
 };
-
-export const socket = load('websockets', async (classDefinition, [websocket, params]) => {
-  return (await new classDefinition()).handle(websocket, params);
-});
